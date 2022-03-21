@@ -21,6 +21,3 @@ improve our run away algorithym, and then improve our pathfinding chasing algori
 # Evaluation
 We would like to be evaluated on your percieved group effort, the functionality
 of the cop/chasing robot in finding the robber/runner robot.
-
-pull
-
