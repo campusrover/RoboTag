@@ -21,3 +21,8 @@ improve our run away algorithym, and then improve our pathfinding chasing algori
 # Evaluation
 We would like to be evaluated on your percieved group effort, the functionality
 of the cop/chasing robot in finding the robber/runner robot.
+
+
+roslaunch turtlebot3_navigation turtlebot3_navigation.launch map_file:=$HOME/tagmap.yaml
+
+ssh ubuntu@100.86.78.102
