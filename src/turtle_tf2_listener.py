@@ -5,6 +5,7 @@ import math
 import tf2_ros
 import geometry_msgs.msg
 import turtlesim.srv
+from state_definition import *
 
 # Create a node and allocate a tf buffer and a tf listener.
 
@@ -24,23 +25,37 @@ if __name__ == '__main__':
 # We are going to steer turtle2. We start by creating a turtle2/cmd_vel publisher
     turtle_vel = rospy.Publisher('%s/cmd_vel' % turtle_name, geometry_msgs.msg.Twist, queue_size=1)
 
+    #initial state is robber
+    state = 0
+
+    #! WE MIGHT NEED CALL BACK FUNCTION TO KEEP TRACK OF STATES
+
+
 # And we loop, 10x per second
     rate = rospy.Rate(10.0)
     while not rospy.is_shutdown():
         try:
-# This is the most important line. Requests the transform between turtle1 and turtle_name
-            trans = tfBuffer.lookup_transform(turtle_name, 'turtle1', rospy.Time())
-        except (tf2_ros.LookupException, tf2_ros.ConnectivityException,tf2_ros.ExtrapolationException):
-            rate.sleep()
-            continue
+            # This is the most important line. Requests the transform between turtle1 and turtle_name
+                trans = tfBuffer.lookup_transform(turtle_name, 'turtle1', rospy.Time())
+            except (tf2_ros.LookupException, tf2_ros.ConnectivityException,tf2_ros.ExtrapolationException):
+                rate.sleep()
+                continue
 
-        msg = geometry_msgs.msg.Twist()
+            msg = geometry_msgs.msg.Twist()
 
-# Some trig to compute the desired motion of turtle2
-        msg.angular.z = 4 * math.atan2(trans.transform.translation.y, trans.transform.translation.x)
-        msg.linear.x = 0.5 * math.sqrt(trans.transform.translation.x ** 2 + trans.transform.translation.y ** 2)
+        if state == 0: #Robber
+            # Some trig to compute the desired motion of turtle2
+            msg.angular.z = -4 * math.atan2(trans.transform.translation.y, trans.transform.translation.x)
+            msg.linear.x = -0.3 * math.sqrt(trans.transform.translation.x ** 2 + trans.transform.translation.y ** 2) #Slower than police
+        else: #Police
+            # Some trig to compute the desired motion of turtle2
+            msg.angular.z = 4 * math.atan2(trans.transform.translation.y, trans.transform.translation.x)
+            msg.linear.x = 0.5 * math.sqrt(trans.transform.translation.x ** 2 + trans.transform.translation.y ** 2)
 
-# And publish it to drive turtle2
+        # And publish it to drive turtle2
         turtle_vel.publish(msg)
 
         rate.sleep()
+
+
+
