@@ -96,6 +96,7 @@ speed2=0
 twist=Twist()
 time_switch=rospy.Time.now()
 
+
 # Wait for published topics, exit on ^c
 while not rospy.is_shutdown():
     if state == "cop":
@@ -104,12 +105,6 @@ while not rospy.is_shutdown():
             inc_y = posey2 -posey1
             angle_to_goal = atan2(inc_y, inc_x)
             z=math.sqrt((inc_x*inc_x)+(inc_y*inc_y))
-            if z > .05:
-                if z < .15:
-                    twist.linear.x=0
-                    twist.angular.z=0
-                    state="robber"
-                    time_switch=rospy.Time.now()
             if (angle_to_goal - theta) > 0.1:
                 twist.linear.x = 0.1
                 twist.angular.z = 0.3
@@ -125,9 +120,22 @@ while not rospy.is_shutdown():
                 z=math.sqrt((inc_x*inc_x)+(inc_y*inc_y))
                 if z>range_ahead+.05:
                     timeis=rospy.Time.now()
-                    while (rospy.Time.now().to_sec()-timeis.to_sec()<2):
-                        twist.linear.x=-.15
+                    while (rospy.Time.now().to_sec()-timeis.to_sec()<3):
+                        twist.linear.x=-.3
                         twist.angular.z=.6
+                        if z > .05:
+                            if z < .15:
+                                twist.linear.x=0
+                                twist.angular.z=0
+                                state="robber"
+                                time_switch=rospy.Time.now()
+            if z > .05:
+                if z < .15:
+                    twist.linear.x=0
+                    twist.angular.z=0
+                    state="robber"
+                    time_switch=rospy.Time.now()
+                
     elif state == "robber":
         if(range_ahead<.3):
             twist.linear.x=-.3
@@ -138,7 +146,7 @@ while not rospy.is_shutdown():
         check=(rospy.Time.now().to_sec()-time_start.to_sec())
         if ((check%3)>2):
             x=random.randint(1,2)
-            z=random.randint(-1,1)
+            z=random.randint(-2,2)
             twist.linear.x=x/10
             twist.angular.z=z/10
         cmd_vel_pub.publish(twist)
@@ -148,7 +156,7 @@ while not rospy.is_shutdown():
             inc_y = posey2 -posey1
             angle_to_goal = atan2(inc_y, inc_x)
             z=math.sqrt((inc_x*inc_x)+(inc_y*inc_y))
-            if z > .07:
+            if z > .05:
                 if z < .15:
                     twist.linear.x=0
                     twist.angular.z=0
