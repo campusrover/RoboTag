@@ -25,7 +25,7 @@
   </include>
   </group>
 
- <node name="rob1" pkg="robotag" type="allinone.py" output="screen"/>
+
 <node name="rob2" pkg="robotag" type="allinone1.py" output="screen"/>
  
 

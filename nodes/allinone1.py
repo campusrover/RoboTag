@@ -99,12 +99,12 @@ time_switch=rospy.Time.now()
 # Wait for published topics, exit on ^c
 while not rospy.is_shutdown():
     if state == "cop":
-        if rospy.Time.now().to_sec()-time_switch.to_sec()>4:
+        if rospy.Time.now().to_sec()-time_switch.to_sec()>10:
             inc_x = posex2 -posex1
             inc_y = posey2 -posey1
             angle_to_goal = atan2(inc_y, inc_x)
             z=math.sqrt((inc_x*inc_x)+(inc_y*inc_y))
-            if z > .07:
+            if z > .05:
                 if z < .15:
                     twist.linear.x=0
                     twist.angular.z=0
@@ -119,10 +119,20 @@ while not rospy.is_shutdown():
             else:
                 twist.linear.x = 0.25
                 twist.angular.z = 0.0
+            if range_ahead<.3:
+                inc_x = posex2 -posex1
+                inc_y = posey2 -posey1
+                z=math.sqrt((inc_x*inc_x)+(inc_y*inc_y))
+                if z>range_ahead+.05:
+                    timeis=rospy.Time.now()
+                    while (rospy.Time.now().to_sec()-timeis.to_sec()<2):
+                        twist.linear.x=-.15
+                        twist.angular.z=.6
+                
     elif state == "robber":
         if(range_ahead<.3):
-            twist.linear.x=-.2
-            twist.angular.z=.4
+            twist.linear.x=-.3
+            twist.angular.z=.5
    # publish cmd_vel from here 
         cmd_vel_msg = name + '/cmd_vel'
         cmd_vel_pub = rospy.Publisher(cmd_vel_msg, Twist, queue_size=10)
@@ -134,7 +144,7 @@ while not rospy.is_shutdown():
             twist.angular.z=z/10
         cmd_vel_pub.publish(twist)
         odom=rospy.Publisher(cmd_vel_msg, Odometry, queue_size=10)
-        if rospy.Time.now().to_sec()-time_switch.to_sec()>4:
+        if rospy.Time.now().to_sec()-time_switch.to_sec()>10:
             inc_x = posex2 -posex1
             inc_y = posey2 -posey1
             angle_to_goal = atan2(inc_y, inc_x)
