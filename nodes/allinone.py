@@ -100,6 +100,11 @@ time_switch=rospy.Time.now()
 while not rospy.is_shutdown():
     if state == "cop":
         if rospy.Time.now().to_sec()-time_switch.to_sec()>4:
+            if(range_ahead<.3):
+                time_now=rospy.Time.now()
+                while(rospy.Time.now().to_sec()-time_now.to_sec()<3)
+                    twist.linear.x=-.3
+                    twist.angular.z=.5
             inc_x = posex2 -posex1
             inc_y = posey2 -posey1
             angle_to_goal = atan2(inc_y, inc_x)
@@ -121,8 +126,8 @@ while not rospy.is_shutdown():
                 twist.angular.z = 0.0
     elif state == "robber":
         if(range_ahead<.3):
-            twist.linear.x=-.2
-            twist.angular.z=.4
+            twist.linear.x=-.3
+            twist.angular.z=.5
    # publish cmd_vel from here 
         cmd_vel_msg = name + '/cmd_vel'
         cmd_vel_pub = rospy.Publisher(cmd_vel_msg, Twist, queue_size=10)
