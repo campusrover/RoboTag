@@ -1,0 +1,38 @@
+<launch>
+
+    <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+
+ 
+  
+
+
+  <!-- start world -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find turtlebot3_gazebo)/worlds/turtlebot3_stage_4.world"/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>  
+
+  <!-- include our robots -->
+  <group ns="robot1">
+  <param name="tf_prefix" value="robot1_tf" />
+  <include file="$(find robotag)/launch/gazebo.launch" >
+  <arg name="init_pose" value="-x 0 -y 1 -z 0" />
+  <arg name="robot_name"  value="Robot1" />
+  </include>
+  </group>
+  
+  <include file="$(find robotag)/launch/amcl_robot1.launch" />
+
+   <include file="$(find robotag)/launch/move_base_1.launch" />
+
+<node name="map_server" pkg="map_server" type="map_server" args="$(find turtlebot3_navigation)/maps/map.yaml" >
+    <param name="frame_id" value="map" />
+  </node>
+
+
+  </launch>

@@ -55,11 +55,11 @@ def print_state():
    time_since = rospy.Time.now() - last_key_press_time
    print("SECS SINCE LAST KEY PRESS: " + str(time_since.secs))
 
-name = 'rob1'
-other = 'rob2'
-state = 'cop'
+name = 'rob2'
+other = 'rob1'
+state = 'robber'
 # init node
-rospy.init_node("rob1")
+rospy.init_node("rob2")
 theta = 0.0
 # subscribers/publishers
 scan_sub = rospy.Subscriber( name + '/scan', LaserScan, scan_cb)

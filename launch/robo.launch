@@ -1,19 +1,19 @@
 
 <launch>
  <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(find turtlebot3_gazebo)/worlds/turtlebot3_stage_4.world"/>
+    <arg name="world_name" value="$(find turtlebot3_gazebo)/worlds/empty.world"/>
     <arg name="paused" value="false"/>
     <arg name="use_sim_time" value="true"/>
     <arg name="gui" value="true"/>
     <arg name="headless" value="false"/>
     <arg name="debug" value="false"/>
   </include> 
+
  <group ns="rob1">
   <param name="tf_prefix" value="rob1" />
   <include file="$(find robotag)/launch/gazebo.launch" >
-  <arg name="init_pose" value="-x .5 -y 0 -z 0" />
+  <arg name="init_pose" value="-x 0 -y -1 -z 0" />
   <arg name="robot_name"  value="Rob1" />
-
   </include>
   </group>
 
@@ -22,35 +22,17 @@
   <include file="$(find robotag)/launch/gazebo.launch" >
   <arg name="init_pose" value="-x 0 -y 1 -z 0" />
   <arg name="robot_name"  value="Rob2" />
-
   </include>
   </group>
+
+
+ 
+
 </launch>
 
-  <!-- <group ns="rob1">
-    <include file="$(find robotag)/launch/gazebo.launch" >
-        <arg name="init_pose" value="-x .5 -y 0 -z 0" />
-        <arg name="robot_name"  value="Rob1" />
-    </include>
-    <node name="rob1" pkg="robotag" type="allinone.py" output="screen">
-      <param name="tf_prefix" value="rob1" />
-      <param name="robot" type="string" value="rob1"/>
-      <param name="other_robot" type="string" value="rob2"/>
-      <param name="state" type="string" value="cop"/>
-    </node>
-  </group>
+  
+    
 
-  <group ns="rob2">
-    <include file="$(find robotag)/launch/gazebo.launch" >
-          <arg name="init_pose" value="-x 0 -y 1 -z 0" />
-          <arg name="robot_name"  value="Rob2" />
-        </include>
-    <node name="rob2" pkg="robotag" type="allinone.py" output="screen">
-        <param name="tf_prefix" value="rob1" />
-        <param name="robot" type="string" value="rob2"/>
-        <param name="other_robot" type="string" value="rob1"/>
-        <param name="state" type="string" value="robber"/>
-        
-    </node>
-  </group> -->
+
+  
 
