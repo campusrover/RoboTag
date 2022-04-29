@@ -1,21 +1,22 @@
-
 <launch>
- <include file="$(find gazebo_ros)/launch/empty_world.launch">
+  <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+  <arg name="x_pos" default="0.0"/>
+  <arg name="y_pos" default="0.0"/>
+  <arg name="z_pos" default="0.0"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(find turtlebot3_gazebo)/worlds/turtlebot3_stage_1.world"/>
     <arg name="paused" value="false"/>
-    <arg name="use_sim_time" value="true"/>
+    <arg name="use_sim_time" value="0.1"/>
     <arg name="gui" value="true"/>
     <arg name="headless" value="false"/>
     <arg name="debug" value="false"/>
-  </include> 
+  </include>  
 
-  <group ns="rob1">
-    <param name="tf_prefix" value="rob1" />
-    <include file="$(find robotag)/launch/gazebo.launch" >
-    <arg name="init_pose" value="-x 0 -y -1 -z 0" />
-    <arg name="robot_name"  value="Rob1" />
-    </include>
-  </group>
+  
+  <param name="robot_description" command="$(find xacro)/xacro $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+
+  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model turtlebot3_burger -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -param robot_description" />
 
   <!-- <group ns="rob2">
   <param name="tf_prefix" value="rob2" />
@@ -24,7 +25,7 @@
   <arg name="robot_name"  value="Rob2" />
   </include>
   </group> -->
-
+  <node name="rob1" pkg="robotag" type="allinone.py" output="screen"/>
   <node name="receiver" pkg="robotag" type="receiver.py" output="screen"/>
   <node name="sender" pkg="robotag" type="sender.py" output="screen"/>
 

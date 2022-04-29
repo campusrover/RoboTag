@@ -16,7 +16,8 @@ from tf.transformations import euler_from_quaternion
 import random
 import os
 from socket import *
-
+import json
+from std_msgs.msg import Float64MultiArray
 
 # fill in scan callback
 def scan_cb(msg):
@@ -43,10 +44,13 @@ def odom_cb(msg):
 
 def odom_cb_other(msg):
    global posex2; global posey2
-   global speed2
-   posex2= msg.pose.pose.position.x
-   posey2=msg.pose.pose.position.y
-   speed2=msg.twist.twist.linear.x
+   global string
+   global data
+   print(msg.data[0])
+   posex2=msg.data[0]
+   posey2=msg.data[1]
+   
+   
 
 
 
@@ -71,7 +75,7 @@ scan_sub = rospy.Subscriber('/scan', LaserScan, scan_cb)
 # RUN rosrun prrexamples key_publisher.py to get /keys
 
 odom_sub = rospy.Subscriber('/odom', Odometry, odom_cb)
-odom_sub_other = rospy.Subscriber('/other_odom', Odometry, odom_cb_other)
+odom_sub_other = rospy.Subscriber('/other_odom',Float64MultiArray, odom_cb_other)
 cmd_vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
 
 # start in state halted and grab the current time
@@ -95,13 +99,15 @@ posey1=0
 speed1=0
 posex2=0
 posey2=0
-speed2=0
+string=""
 twist=Twist()
 time_switch=rospy.Time.now()
 
 
 # Wait for published topics, exit on ^c
 while not rospy.is_shutdown():
+    #print(json.loads(string))
+    
     
     if state == "cop":
         if rospy.Time.now().to_sec()-time_switch.to_sec()>10:
@@ -139,7 +145,6 @@ while not rospy.is_shutdown():
                     twist.angular.z=0
                     state="robber"
                     time_switch=rospy.Time.now()
-                
     elif state == "robber":
         if(range_ahead<.3):
             twist.linear.x=-.3
@@ -154,7 +159,6 @@ while not rospy.is_shutdown():
             twist.linear.x=x/10
             twist.angular.z=z/10
         cmd_vel_pub.publish(twist)
-        odom=rospy.Publisher(cmd_vel_msg, Odometry, queue_size=10)
         if rospy.Time.now().to_sec()-time_switch.to_sec()>10:
             inc_x = posex2 -posex1
             inc_y = posey2 -posey1
@@ -169,7 +173,7 @@ while not rospy.is_shutdown():
    # print out coordinates, speed, the current state and time since last key press
     print(posex2)
     print(posey2)
-    print(speed2)
+  
     print_state()
 
     #checks for the closest object
