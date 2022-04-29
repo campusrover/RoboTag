@@ -64,7 +64,7 @@ def print_state():
    print("SECS SINCE LAST KEY PRESS: " + str(time_since.secs))
 
 name = 'rob1'
-state = 'cop'
+state = 'robber'
 # init node
 rospy.init_node("rob1")
 theta = 0.0

@@ -32,7 +32,6 @@ while not rospy.is_shutdown():
     y=y[1]
     x=float(x)
     y=float(y)
-    
     my_msg = Float64MultiArray()
     d=[x, y, 67.654236]
     
