@@ -9,25 +9,26 @@
     <arg name="debug" value="false"/>
   </include> 
 
- <group ns="rob1">
-  <param name="tf_prefix" value="rob1" />
-  <include file="$(find robotag)/launch/gazebo.launch" >
-  <arg name="init_pose" value="-x 0 -y -1 -z 0" />
-  <arg name="robot_name"  value="Rob1" />
-  </include>
+  <group ns="rob1">
+    <param name="tf_prefix" value="rob1" />
+    <include file="$(find robotag)/launch/gazebo.launch" >
+    <arg name="init_pose" value="-x 0 -y -1 -z 0" />
+    <arg name="robot_name"  value="Rob1" />
+    </include>
   </group>
 
-  <group ns="rob2">
+  <!-- <group ns="rob2">
   <param name="tf_prefix" value="rob2" />
   <include file="$(find robotag)/launch/gazebo.launch" >
   <arg name="init_pose" value="-x 0 -y 1 -z 0" />
   <arg name="robot_name"  value="Rob2" />
   </include>
-  </group>
+  </group> -->
+
+  <node name="receiver" pkg="robotag" type="receiver.py" output="screen"/>
+  <node name="sender" pkg="robotag" type="sender.py" output="screen"/>
 
 
-<node name="rob2" pkg="robotag" type="allinone1.py" output="screen"/>
- 
 
 </launch>
 

@@ -14,6 +14,9 @@ import tf_conversions
 from math import atan2
 from tf.transformations import euler_from_quaternion
 import random
+import os
+from socket import *
+
 
 # fill in scan callback
 def scan_cb(msg):
@@ -38,12 +41,13 @@ def odom_cb(msg):
    rot_q1 = msg.pose.pose.orientation
    (roll, pitch, theta) = euler_from_quaternion([rot_q1.x, rot_q1.y, rot_q1.z, rot_q1.w])
 
-def odom_cb2(msg):
+def odom_cb_other(msg):
    global posex2; global posey2
    global speed2
    posex2= msg.pose.pose.position.x
    posey2=msg.pose.pose.position.y
    speed2=msg.twist.twist.linear.x
+
 
 
 # print the state of the robot
@@ -56,20 +60,19 @@ def print_state():
    print("SECS SINCE LAST KEY PRESS: " + str(time_since.secs))
 
 name = 'rob1'
-other = 'rob2'
 state = 'cop'
 # init node
 rospy.init_node("rob1")
 theta = 0.0
 # subscribers/publishers
-scan_sub = rospy.Subscriber( name + '/scan', LaserScan, scan_cb)
+scan_sub = rospy.Subscriber('/scan', LaserScan, scan_cb)
 
 
 # RUN rosrun prrexamples key_publisher.py to get /keys
 
-odom_sub = rospy.Subscriber(name + '/odom', Odometry, odom_cb)
-odom_sub2 = rospy.Subscriber(other + '/odom', Odometry, odom_cb2)
-cmd_vel_pub = rospy.Publisher(name + '/cmd_vel', Twist, queue_size=10)
+odom_sub = rospy.Subscriber('/odom', Odometry, odom_cb)
+odom_sub_other = rospy.Subscriber('/other_odom', Odometry, odom_cb_other)
+cmd_vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
 
 # start in state halted and grab the current time
 
@@ -99,6 +102,7 @@ time_switch=rospy.Time.now()
 
 # Wait for published topics, exit on ^c
 while not rospy.is_shutdown():
+    
     if state == "cop":
         if rospy.Time.now().to_sec()-time_switch.to_sec()>10:
             inc_x = posex2 -posex1
@@ -141,7 +145,7 @@ while not rospy.is_shutdown():
             twist.linear.x=-.3
             twist.angular.z=.5
    # publish cmd_vel from here 
-        cmd_vel_msg = name + '/cmd_vel'
+        cmd_vel_msg = '/cmd_vel'
         cmd_vel_pub = rospy.Publisher(cmd_vel_msg, Twist, queue_size=10)
         check=(rospy.Time.now().to_sec()-time_start.to_sec())
         if ((check%3)>2):

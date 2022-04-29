@@ -1,24 +1,21 @@
 <launch>
-  <!-- No namespace here as we will share this description. 
-       Access with slash at the beginning -->
   <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
-  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro" />
-  
-  <!-- BEGIN ROBOT 1-->
-  <group ns="robot1">
-    <param name="tf_prefix" value="robot1_tf" />
-    <include file="$(find robotag)/launch/gazebo.launch" >
-      <arg name="init_pose" value="-x 1 -y 1 -z 0" />
-      <arg name="robot_name"  value="robot1" />
-    </include>
-  </group>
+  <arg name="x_pos" default="0.0"/>
+  <arg name="y_pos" default="0.0"/>
+  <arg name="z_pos" default="0.0"/>
 
-  <!-- BEGIN ROBOT 2-->
-  <group ns="robot2">
-    <param name="tf_prefix" value="robot2_tf" />
-    <include file="$(find robotag)/launch/gazebo.launch" >
-      <arg name="init_pose" value="-x -1 -y 1 -z 0" />
-      <arg name="robot_name"  value="robot2" />
-    </include>
-  </group>
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find turtlebot3_gazebo)/worlds/turtlebot3_stage_1.world"/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="0.1"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>  
+
+
+  <param name="robot_description" command="$(find xacro)/xacro.py $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+
+  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model turtlebot3_burger -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -param robot_description" />
+
 </launch>
