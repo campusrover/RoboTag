@@ -57,11 +57,11 @@ def key_cb(msg):
    last_key_press_time = rospy.Time.now()
 
 def left_or_right(angle_to_goal, theta):
-            if angle_to_goal < 0:
-                angle_to_goal = (2* math.pi) + angle_to_goal
+            angle_to_goal += math.pi
+            theta += math.pi
             goal_range = theta + math.pi
             wrapped = goal_range - (2 * math.pi)
-            if abs(angle_to_goal - theta) > 0.1:
+            if abs(angle_to_goal - theta) > 0.2:
                 if (goal_range) > (2 * math.pi) and (theta < angle_to_goal or angle_to_goal < wrapped):
                     return("left")
                 elif (goal_range) < (2 * math.pi) and (theta < angle_to_goal and angle_to_goal < goal_range):
@@ -83,7 +83,7 @@ def print_state():
 
 count=0
 name = 'rob1'
-state = 'robber'
+state = 'cop'
 # init node
 rospy.init_node("rob1")
 theta = 0.0
@@ -137,12 +137,15 @@ while not rospy.is_shutdown():
             wrapped = goal_range - 6.14
             command = left_or_right(angle_to_goal,theta)
             if (command == "left"):
-                twist.linear.x = 0.0
-                twist.angular.z = -0.3
-            elif (command == "right"):
-                twist.linear.x = 0.0
+                print("cop should go left")
+                twist.linear.x = 0.1
                 twist.angular.z = 0.3
+            elif (command == "right"):
+                print("cop should go right")
+                twist.linear.x = 0.1
+                twist.angular.z = -0.3
             elif (command == "straight"):
+                print("cop should go straight")
                 twist.linear.x = 0.2
                 twist.angular.z = 0.0
             # if range_ahead<.3:
@@ -167,15 +170,11 @@ while not rospy.is_shutdown():
                     state="robber"
                     time_switch=rospy.Time.now()
     elif state == "robber":
-        if statek=='r':
-                state='robber-user'
         scan_sub = rospy.Subscriber('/scan', LaserScan, scan_cb)
         print(posex1)
-        print(posey1)
-        
-            
-   # publish cmd_vel from here 
-    cmd_vel_pub.publish(twist)
+        print(posey1)     
+        # publish cmd_vel from here 
+        cmd_vel_pub.publish(twist)
         if rospy.Time.now().to_sec()-time_switch.to_sec()>10:
             inc_x = posex2 -posex1
             inc_y = posey2 -posey1
