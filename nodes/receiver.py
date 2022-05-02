@@ -23,18 +23,13 @@ UDPSock.bind(addr)
 while not rospy.is_shutdown():
     (data, addr) = UDPSock.recvfrom(buf)
     data=data.decode('utf-8')
-    data=data.split("\n")
-    x=data[10]
-    x=x.split()
-    x=x[1]
-    y=data[11]
-    y=y.split()
-    y=y[1]
+    data=data.split()
+    x=data[0]
+    y=data[1]
     x=float(x)
     y=float(y)
     my_msg = Float64MultiArray()
     d=[x, y, 67.654236]
-    
     my_msg.data = d
     mypub.publish(my_msg)
     if data == "exit":
