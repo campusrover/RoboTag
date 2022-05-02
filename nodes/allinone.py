@@ -35,26 +35,16 @@ def scan_cb(msg):
 
 
 
-# odom is also not necessary but very useful
-def odom_cb(msg):
-   global posex1; global posey1
-   global speed1
-   global rot_q1
-   global theta
-   global count
-   global realx
-   global realy
-   count+=1
-   if count==1:
-       realx=msg.pose.pose.position.x
-       realy=msg.pose.pose.position.y
-   posex1= msg.pose.pose.position.x-realx
-   posey1=msg.pose.pose.position.y-realy
-   speed1=msg.twist.twist.linear.x
-   rot_q1 = msg.pose.pose.orientation
-   (roll, pitch, theta) = euler_from_quaternion([rot_q1.x, rot_q1.y, rot_q1.z, rot_q1.w])
+def get_amcl_coors(msg):
+    global posex1, posey1, theta
+    orientation_q = msg.pose.pose.orientation
+    orientation_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w]
+    (roll, pitch, theta) = euler_from_quaternion (orientation_list)
+    posex1 = msg.pose.pose.position.x
+    posey1 = msg.pose.pose.position.y
 
-def odom_cb_other(msg):
+
+def amcl_coors_other(msg):
    global posex2; global posey2
    global string
    global data
@@ -90,8 +80,8 @@ scan_sub = rospy.Subscriber('/scan', LaserScan, scan_cb)
 
 # RUN rosrun prrexamples key_publisher.py to get /keys
 key_sub = rospy.Subscriber('keys', String, key_cb)
-odom_sub = rospy.Subscriber('/odom', Odometry, odom_cb)
-odom_sub_other = rospy.Subscriber('/other_odom',Float64MultiArray, odom_cb_other)
+amcl_sub = rospy.Subscriber('/amcl_pose', PoseWithCovarianceStamped, get_amcl_coors)
+amvl_sub_other = rospy.Subscriber('/other_odom', Float64MultiArray, amcl_coors_other)
 cmd_vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
 
 # start in state halted and grab the current time
