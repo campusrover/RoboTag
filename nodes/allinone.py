@@ -56,6 +56,21 @@ def key_cb(msg):
    statek = msg.data
    last_key_press_time = rospy.Time.now()
 
+def left_or_right(angle_to_goal, theta):
+            if angle_to_goal < 0:
+                angle_to_goal = (2* math.pi) + angle_to_goal
+            goal_range = theta + math.pi
+            wrapped = goal_range - (2 * math.pi)
+            if abs(angle_to_goal - theta) > 0.1:
+                if (goal_range) > (2 * math.pi) and (theta < angle_to_goal or angle_to_goal < wrapped):
+                    return("left")
+                elif (goal_range) < (2 * math.pi) and (theta < angle_to_goal and angle_to_goal < goal_range):
+                    return("left")
+                else:
+                    return("right")
+
+            else:
+                return("straight")
 # print the state of the robot
 def print_state():
    print("---")
@@ -117,24 +132,17 @@ while not rospy.is_shutdown():
             inc_x = posex2 -posex1
             inc_y = posey2 -posey1
             angle_to_goal = atan2(inc_y, inc_x)
-            print("ANGLE @ GOAL")
-            print(angle_to_goal)
-            print(theta)
             z=math.sqrt((inc_x*inc_x)+(inc_y*inc_y))
             goal_range = theta + 3.14
             wrapped = goal_range - 6.14
-            if abs(angle_to_goal - theta) > 0.1:
-                if (goal_range) > 6.14 and (theta < angle_to_goal or angle_to_goal < wrapped):
-                    twist.linear.x = 0.0
-                    twist.angular.z = -0.3
-                elif (goal_range) < 6.14 and (theta < angle_to_goal or angle_to_goal < goal_range):
-                    twist.linear.x = 0.0
-                    twist.angular.z = -0.3
-                else:
-                    twist.linear.x = 0.0
-                    twist.angular.z = 0.3
-
-            else:
+            command = left_or_right(angle_to_goal,theta)
+            if (command == "left"):
+                twist.linear.x = 0.0
+                twist.angular.z = -0.3
+            elif (command == "right"):
+                twist.linear.x = 0.0
+                twist.angular.z = 0.3
+            elif (command == "straight"):
                 twist.linear.x = 0.2
                 twist.angular.z = 0.0
             # if range_ahead<.3:
@@ -167,10 +175,7 @@ while not rospy.is_shutdown():
         
             
    # publish cmd_vel from here 
-        cmd_vel_msg = '/cmd_vel'
-        cmd_vel_pub = rospy.Publisher(cmd_vel_msg, Twist, queue_size=10)
-        check=(rospy.Time.now().to_sec()-time_start.to_sec())
-        cmd_vel_pub.publish(twist)
+    cmd_vel_pub.publish(twist)
         if rospy.Time.now().to_sec()-time_switch.to_sec()>10:
             inc_x = posex2 -posex1
             inc_y = posey2 -posey1
