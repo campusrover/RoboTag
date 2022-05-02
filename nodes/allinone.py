@@ -22,9 +22,14 @@ from std_msgs.msg import Float64MultiArray
 # fill in scan callback
 def scan_cb(msg):
    global range_ahead
+   global range_left
+   global range_right
    msg.range_max=5
    msg.range_min=.15
    range_ahead=msg.ranges[0]
+   range_left=msg.ranges[270]
+   range_right=msg.ranges[90]
+  
    return range_ahead
 
 
@@ -36,8 +41,15 @@ def odom_cb(msg):
    global speed1
    global rot_q1
    global theta
-   posex1= msg.pose.pose.position.x
-   posey1=msg.pose.pose.position.y
+   global count
+   global realx
+   global realy
+   count+=1
+   if count==1:
+       realx=msg.pose.pose.position.x
+       realy=msg.pose.pose.position.y
+   posex1= msg.pose.pose.position.x-realx
+   posey1=msg.pose.pose.position.y-realy
    speed1=msg.twist.twist.linear.x
    rot_q1 = msg.pose.pose.orientation
    (roll, pitch, theta) = euler_from_quaternion([rot_q1.x, rot_q1.y, rot_q1.z, rot_q1.w])
@@ -51,8 +63,10 @@ def odom_cb_other(msg):
    posey2=msg.data[1]
    
    
-
-
+def key_cb(msg):
+   global statek; global last_key_press_time
+   statek = msg.data
+   last_key_press_time = rospy.Time.now()
 
 # print the state of the robot
 def print_state():
@@ -63,6 +77,8 @@ def print_state():
    time_since = rospy.Time.now() - last_key_press_time
    print("SECS SINCE LAST KEY PRESS: " + str(time_since.secs))
 
+last_key_press_time = rospy.Time.now()
+count=0
 name = 'rob1'
 state = 'robber'
 # init node
@@ -73,7 +89,7 @@ scan_sub = rospy.Subscriber('/scan', LaserScan, scan_cb)
 
 
 # RUN rosrun prrexamples key_publisher.py to get /keys
-
+key_sub = rospy.Subscriber('keys', String, key_cb)
 odom_sub = rospy.Subscriber('/odom', Odometry, odom_cb)
 odom_sub_other = rospy.Subscriber('/other_odom',Float64MultiArray, odom_cb_other)
 cmd_vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
@@ -86,7 +102,8 @@ last_key_press_time = rospy.Time.now()
 rate = rospy.Rate(10)
 #initializes distance measurement
 range_ahead=.3
-
+range_left=.3
+range_right=.3
 #initializes the zigzag angular variable
 
 #initializes the time variable
@@ -102,25 +119,25 @@ posey2=0
 string=""
 twist=Twist()
 time_switch=rospy.Time.now()
-
+statek='z'
 
 # Wait for published topics, exit on ^c
 while not rospy.is_shutdown():
     #print(json.loads(string))
-    
-    
     if state == "cop":
         if rospy.Time.now().to_sec()-time_switch.to_sec()>10:
+            if statek=='c':
+                state='cop-user'
             inc_x = posex2 -posex1
             inc_y = posey2 -posey1
             angle_to_goal = atan2(inc_y, inc_x)
             z=math.sqrt((inc_x*inc_x)+(inc_y*inc_y))
             if (angle_to_goal - theta) > 0.1:
                 twist.linear.x = 0.1
-                twist.angular.z = 0.3
+                twist.angular.z = -0.3
             elif (angle_to_goal - theta) < -0.1:
                 twist.linear.x = 0.1
-                twist.angular.z = -0.3
+                twist.angular.z = 0.3
             else:
                 twist.linear.x = 0.25
                 twist.angular.z = 0.0
@@ -146,18 +163,17 @@ while not rospy.is_shutdown():
                     state="robber"
                     time_switch=rospy.Time.now()
     elif state == "robber":
-        if(range_ahead<.3):
-            twist.linear.x=-.3
-            twist.angular.z=.5
+        if statek=='r':
+                state='robber-user'
+        scan_sub = rospy.Subscriber('/scan', LaserScan, scan_cb)
+        print(posex1)
+        print(posey1)
+        
+            
    # publish cmd_vel from here 
         cmd_vel_msg = '/cmd_vel'
         cmd_vel_pub = rospy.Publisher(cmd_vel_msg, Twist, queue_size=10)
         check=(rospy.Time.now().to_sec()-time_start.to_sec())
-        if ((check%3)>2):
-            x=random.randint(1,2)
-            z=random.randint(-2,2)
-            twist.linear.x=x/10
-            twist.angular.z=z/10
         cmd_vel_pub.publish(twist)
         if rospy.Time.now().to_sec()-time_switch.to_sec()>10:
             inc_x = posex2 -posex1
@@ -170,6 +186,27 @@ while not rospy.is_shutdown():
                     twist.angular.z=0
                     state="cop"
                     time_switch=rospy.Time.now()
+        if (range_left<range_right):
+            if range_left>.05:
+                print("should turn right")
+                twist.angular.z=.2
+                twist.linear.x=.1
+        elif (range_right<range_left):
+            if range_right>.05:
+                print("should turn left")
+                twist.angular.z=-.2
+                twist.linear.x=.1
+        else:
+            twist.angular.z=0
+            twist.linear.x=.1
+            print("Only go forwards")
+        if (range_ahead<.6):
+            if range_ahead>0:
+                twist.linear.x=0
+                twist.angular.z=.2
+    elif state=='robber-user':
+        
+    elif state=='cop-user':
    # print out coordinates, speed, the current state and time since last key press
     print(posex2)
     print(posey2)
