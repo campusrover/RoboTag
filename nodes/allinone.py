@@ -117,33 +117,43 @@ while not rospy.is_shutdown():
             inc_x = posex2 -posex1
             inc_y = posey2 -posey1
             angle_to_goal = atan2(inc_y, inc_x)
+            print("ANGLE @ GOAL")
+            print(angle_to_goal)
+            print(theta)
             z=math.sqrt((inc_x*inc_x)+(inc_y*inc_y))
-            if (angle_to_goal - theta) > 0.1:
-                twist.linear.x = 0.1
-                twist.angular.z = -0.3
-            elif (angle_to_goal - theta) < -0.1:
-                twist.linear.x = 0.1
-                twist.angular.z = 0.3
+            goal_range = theta + 3.14
+            wrapped = goal_range - 6.14
+            if abs(angle_to_goal - theta) > 0.1:
+                if (goal_range) > 6.14 and (theta < angle_to_goal or angle_to_goal < wrapped):
+                    twist.linear.x = 0.0
+                    twist.angular.z = -0.3
+                elif (goal_range) < 6.14 and (theta < angle_to_goal or angle_to_goal < goal_range):
+                    twist.linear.x = 0.0
+                    twist.angular.z = -0.3
+                else:
+                    twist.linear.x = 0.0
+                    twist.angular.z = 0.3
+
             else:
-                twist.linear.x = 0.25
+                twist.linear.x = 0.2
                 twist.angular.z = 0.0
-            if range_ahead<.3:
-                inc_x = posex2 -posex1
-                inc_y = posey2 -posey1
-                z=math.sqrt((inc_x*inc_x)+(inc_y*inc_y))
-                if z>range_ahead+.05:
-                    timeis=rospy.Time.now()
-                    while (rospy.Time.now().to_sec()-timeis.to_sec()<3):
-                        twist.linear.x=-.3
-                        twist.angular.z=.6
-                        if z > .05:
-                            if z < .15:
-                                twist.linear.x=0
-                                twist.angular.z=0
-                                state="robber"
-                                time_switch=rospy.Time.now()
+            # if range_ahead<.3:
+            #     inc_x = posex2 -posex1
+            #     inc_y = posey2 -posey1
+            #     z=math.sqrt((inc_x*inc_x)+(inc_y*inc_y))
+            #     if z>range_ahead+.05:
+            #         timeis=rospy.Time.now()
+            #         while (rospy.Time.now().to_sec()-timeis.to_sec()<3):
+            #             twist.linear.x=-.3
+            #             twist.angular.z=.6
+            #             if z > .05:
+            #                 if z < .15:
+            #                     twist.linear.x=0
+            #                     twist.angular.z=0
+            #                     state="robber"
+            #                     time_switch=rospy.Time.now()
             if z > .05:
-                if z < .15:
+                if z < .3:
                     twist.linear.x=0
                     twist.angular.z=0
                     state="robber"
@@ -167,7 +177,7 @@ while not rospy.is_shutdown():
             angle_to_goal = atan2(inc_y, inc_x)
             z=math.sqrt((inc_x*inc_x)+(inc_y*inc_y))
             if z > .05:
-                if z < .15:
+                if z < .3:
                     twist.linear.x=0
                     twist.angular.z=0
                     state="cop"
