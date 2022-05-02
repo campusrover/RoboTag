@@ -18,6 +18,7 @@ import os
 from socket import *
 import json
 from std_msgs.msg import Float64MultiArray
+from geometry_msgs.msg import PoseWithCovarianceStamped 
 
 # fill in scan callback
 def scan_cb(msg):
@@ -31,9 +32,6 @@ def scan_cb(msg):
    range_right=msg.ranges[90]
   
    return range_ahead
-
-
-
 
 def get_amcl_coors(msg):
     global posex1, posey1, theta
@@ -67,7 +65,7 @@ def print_state():
    time_since = rospy.Time.now() - last_key_press_time
    print("SECS SINCE LAST KEY PRESS: " + str(time_since.secs))
 
-last_key_press_time = rospy.Time.now()
+
 count=0
 name = 'rob1'
 state = 'robber'
@@ -76,12 +74,10 @@ rospy.init_node("rob1")
 theta = 0.0
 # subscribers/publishers
 scan_sub = rospy.Subscriber('/scan', LaserScan, scan_cb)
-
-
 # RUN rosrun prrexamples key_publisher.py to get /keys
 key_sub = rospy.Subscriber('keys', String, key_cb)
 amcl_sub = rospy.Subscriber('/amcl_pose', PoseWithCovarianceStamped, get_amcl_coors)
-amvl_sub_other = rospy.Subscriber('/other_odom', Float64MultiArray, amcl_coors_other)
+amcl_sub_other = rospy.Subscriber('/other_odom', Float64MultiArray, amcl_coors_other)
 cmd_vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
 
 # start in state halted and grab the current time
@@ -91,9 +87,9 @@ last_key_press_time = rospy.Time.now()
 # set rate
 rate = rospy.Rate(10)
 #initializes distance measurement
-range_ahead=.3
-range_left=.3
-range_right=.3
+range_ahead=0.3
+range_left=0.3
+range_right=0.3
 #initializes the zigzag angular variable
 
 #initializes the time variable
@@ -195,8 +191,8 @@ while not rospy.is_shutdown():
                 twist.linear.x=0
                 twist.angular.z=.2
     elif state=='robber-user':
-        
-    elif state=='cop-user':
+        temp = "temps"
+    # elif state=='cop-user':
    # print out coordinates, speed, the current state and time since last key press
     print(posex2)
     print(posey2)
