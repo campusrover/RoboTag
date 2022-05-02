@@ -121,9 +121,10 @@ string=""
 twist=Twist()
 time_switch=rospy.Time.now()
 statek='z'
-
+count=0
 # Wait for published topics, exit on ^c
 while not rospy.is_shutdown():
+    count+=1
     #print(json.loads(string))
     if state == "cop":
         if rospy.Time.now().to_sec()-time_switch.to_sec()>10:
@@ -170,6 +171,10 @@ while not rospy.is_shutdown():
                     state="robber"
                     time_switch=rospy.Time.now()
     elif state == "robber":
+        if count==1:
+            time_set=rospy.Time.now()
+            while (rospy.Time.now().to_sec()-time_set.to_sec()<10):
+                r=1
         scan_sub = rospy.Subscriber('/scan', LaserScan, scan_cb)
         print(posex1)
         print(posey1)     
@@ -204,6 +209,9 @@ while not rospy.is_shutdown():
             if range_ahead>0:
                 twist.linear.x=0
                 twist.angular.z=.2
+        if rospy.Time.now().to_sec()-time_switch.to_sec()<3:
+            twist.linear.x=-.2
+            twist.angular.z=-.2
     elif state=='robber-user':
         temp = "temps"
     # elif state=='cop-user':
