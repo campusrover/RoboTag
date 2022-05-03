@@ -85,7 +85,7 @@ def print_state():
 
 
 name = 'rob1'
-state = 'robber'
+state = 'cop'
 # init node
 rospy.init_node("rob1")
 theta = 0.0
@@ -100,7 +100,7 @@ cmd_vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
 # start in state halted and grab the current time
 
 last_key_press_time = rospy.Time.now()
-
+first = True
 # set rate
 rate = rospy.Rate(10)
 #initializes distance measurement
@@ -169,52 +169,53 @@ while not rospy.is_shutdown():
                     twist.angular.z=0
                     state="robber"
                     time_switch=rospy.Time.now()
+                    first = False
         else:
             twist.linear.x=0
             twist.angular.z=0
     elif state == "robber":
-        if rospy.Time.now().to_sec()-time_select.to_sec()>5:
+        # if rospy.Time.now().to_sec()-time_select.to_sec()>5:
             
-            scan_sub = rospy.Subscriber('/scan', LaserScan, scan_cb)
-            print(posex1)
-            print(posey1)     
-            # publish cmd_vel from here 
+        scan_sub = rospy.Subscriber('/scan', LaserScan, scan_cb)
+        print(posex1)
+        print(posey1)     
+        # publish cmd_vel from here 
+        cmd_vel_pub.publish(twist)
+        while (rospy.Time.now().to_sec() - time_switch.to_sec() < 4 and first == False):
+            twist.angular.z=.4
+            twist.linear.x=-.1
             cmd_vel_pub.publish(twist)
-            if rospy.Time.now().to_sec()-time_switch.to_sec()>10:
-                inc_x = posex2 -posex1
-                inc_y = posey2 -posey1
-                angle_to_goal = atan2(inc_y, inc_x)
-                z=math.sqrt((inc_x*inc_x)+(inc_y*inc_y))
-                if z > .05:
-                    if z < .3:
-                        twist.linear.x=0
-                        twist.angular.z=0
-                        state="cop"
-                        time_switch=rospy.Time.now()
-            if (range_left<range_right):
-                if range_left>.05:
-                    print("should turn right")
-                    twist.angular.z=.2
-                    twist.linear.x=.1
-            elif (range_right<range_left):
-                if range_right>.05:
-                    print("should turn left")
-                    twist.angular.z=-.2
-                    twist.linear.x=.1
-            else:
-                twist.angular.z=0
-                twist.linear.x=.1
-                print("Only go forwards")
-            if (range_ahead<.6):
-                if range_ahead>0:
+        if rospy.Time.now().to_sec()-time_switch.to_sec()>10:
+            inc_x = posex2 -posex1
+            inc_y = posey2 -posey1
+            angle_to_goal = atan2(inc_y, inc_x)
+            z=math.sqrt((inc_x*inc_x)+(inc_y*inc_y))
+            if z > .05:
+                if z < .3:
                     twist.linear.x=0
-                    twist.angular.z=.2
-            if rospy.Time.now().to_sec()-time_switch.to_sec()<5:
-                if (range_ahead1<.3):
-                    hold=rospy.Time.now()
-                    if rospy.Time.now().to_sec()-hold.to_sec()<2:
-                        twist.angular.z=.2
-                        twist.linear.x=-.1
+                    twist.angular.z=0
+                    state="cop"
+                    time_switch=rospy.Time.now()
+        if (range_left<range_right):
+            if range_left>.05:
+                print("should turn right")
+                twist.angular.z=.2
+                twist.linear.x=.1
+        elif (range_right<range_left):
+            if range_right>.05:
+                print("should turn left")
+                twist.angular.z=-.2
+                twist.linear.x=.1
+        else:
+            twist.angular.z=0
+            twist.linear.x=.1
+            print("Only go forwards")
+        if (range_ahead<.6):
+            if range_ahead>0:
+                twist.linear.x=0
+                twist.angular.z=.2
+        
+            
     # elif state=='cop-user':
    # print out coordinates, speed, the current state and time since last key press
     print(posex2)
