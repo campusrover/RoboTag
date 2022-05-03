@@ -25,9 +25,11 @@ def scan_cb(msg):
    global range_ahead
    global range_left
    global range_right
+   global range_ahead1
    msg.range_max=5
    msg.range_min=.15
    range_ahead=msg.ranges[0]
+   range_ahead1=sum(msg.ranges[350:359]+msg.ranges[0:10])/len(msg.ranges[350:359]+msg.ranges[0:10])
    range_left=msg.ranges[270]
    range_right=msg.ranges[90]
   
@@ -81,9 +83,9 @@ def print_state():
    print("SECS SINCE LAST KEY PRESS: " + str(time_since.secs))
 
 
-count=0
+
 name = 'rob1'
-state = 'cop'
+state = 'robber'
 # init node
 rospy.init_node("rob1")
 theta = 0.0
@@ -121,15 +123,12 @@ string=""
 twist=Twist()
 time_switch=rospy.Time.now()
 statek='z'
-count=0
+time_select=rospy.Time.now()
 # Wait for published topics, exit on ^c
 while not rospy.is_shutdown():
-    count+=1
     #print(json.loads(string))
     if state == "cop":
         if rospy.Time.now().to_sec()-time_switch.to_sec()>10:
-            if statek=='c':
-                state='cop-user'
             inc_x = posex2 -posex1
             inc_y = posey2 -posey1
             angle_to_goal = atan2(inc_y, inc_x)
@@ -170,57 +169,57 @@ while not rospy.is_shutdown():
                     twist.angular.z=0
                     state="robber"
                     time_switch=rospy.Time.now()
-    elif state == "robber":
-        if count==1:
-            time_set=rospy.Time.now()
-            while (rospy.Time.now().to_sec()-time_set.to_sec()<10):
-                r=1
-        scan_sub = rospy.Subscriber('/scan', LaserScan, scan_cb)
-        print(posex1)
-        print(posey1)     
-        # publish cmd_vel from here 
-        cmd_vel_pub.publish(twist)
-        if rospy.Time.now().to_sec()-time_switch.to_sec()>10:
-            inc_x = posex2 -posex1
-            inc_y = posey2 -posey1
-            angle_to_goal = atan2(inc_y, inc_x)
-            z=math.sqrt((inc_x*inc_x)+(inc_y*inc_y))
-            if z > .05:
-                if z < .3:
-                    twist.linear.x=0
-                    twist.angular.z=0
-                    state="cop"
-                    time_switch=rospy.Time.now()
-        if (range_left<range_right):
-            if range_left>.05:
-                print("should turn right")
-                twist.angular.z=.2
-                twist.linear.x=.1
-        elif (range_right<range_left):
-            if range_right>.05:
-                print("should turn left")
-                twist.angular.z=-.2
-                twist.linear.x=.1
         else:
+            twist.linear.x=0
             twist.angular.z=0
-            twist.linear.x=.1
-            print("Only go forwards")
-        if (range_ahead<.6):
-            if range_ahead>0:
-                twist.linear.x=0
-                twist.angular.z=.2
-        if rospy.Time.now().to_sec()-time_switch.to_sec()<3:
-            twist.linear.x=-.2
-            twist.angular.z=-.2
-    elif state=='robber-user':
-        temp = "temps"
+    elif state == "robber":
+        if rospy.Time.now().to_sec()-time_select.to_sec()>5:
+            
+            scan_sub = rospy.Subscriber('/scan', LaserScan, scan_cb)
+            print(posex1)
+            print(posey1)     
+            # publish cmd_vel from here 
+            cmd_vel_pub.publish(twist)
+            if rospy.Time.now().to_sec()-time_switch.to_sec()>10:
+                inc_x = posex2 -posex1
+                inc_y = posey2 -posey1
+                angle_to_goal = atan2(inc_y, inc_x)
+                z=math.sqrt((inc_x*inc_x)+(inc_y*inc_y))
+                if z > .05:
+                    if z < .3:
+                        twist.linear.x=0
+                        twist.angular.z=0
+                        state="cop"
+                        time_switch=rospy.Time.now()
+            if (range_left<range_right):
+                if range_left>.05:
+                    print("should turn right")
+                    twist.angular.z=.2
+                    twist.linear.x=.1
+            elif (range_right<range_left):
+                if range_right>.05:
+                    print("should turn left")
+                    twist.angular.z=-.2
+                    twist.linear.x=.1
+            else:
+                twist.angular.z=0
+                twist.linear.x=.1
+                print("Only go forwards")
+            if (range_ahead<.6):
+                if range_ahead>0:
+                    twist.linear.x=0
+                    twist.angular.z=.2
+            if rospy.Time.now().to_sec()-time_switch.to_sec()<5:
+                if (range_ahead1<.3):
+                    hold=rospy.Time.now()
+                    if rospy.Time.now().to_sec()-hold.to_sec()<2:
+                        twist.angular.z=.2
+                        twist.linear.x=-.1
     # elif state=='cop-user':
    # print out coordinates, speed, the current state and time since last key press
     print(posex2)
     print(posey2)
-  
     print_state()
-
     #checks for the closest object
     cmd_vel_pub.publish(twist)
     rate.sleep()
