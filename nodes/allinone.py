@@ -70,7 +70,6 @@ def left_or_right(angle_to_goal, theta):
                     return("left")
                 else:
                     return("right")
-
             else:
                 return("straight")
 # print the state of the robot
@@ -85,7 +84,7 @@ def print_state():
 
 
 name = 'rob1'
-state = 'cop'
+state = 'robber'
 # init node
 rospy.init_node("rob1")
 theta = 0.0
@@ -139,11 +138,11 @@ while not rospy.is_shutdown():
             if (command == "left"):
                 print("cop should go left")
                 twist.linear.x = 0.1
-                twist.angular.z = 0.3
+                twist.angular.z = 0.35
             elif (command == "right"):
                 print("cop should go right")
                 twist.linear.x = 0.1
-                twist.angular.z = -0.3
+                twist.angular.z = -0.35
             elif (command == "straight"):
                 print("cop should go straight")
                 twist.linear.x = 0.2
@@ -164,7 +163,7 @@ while not rospy.is_shutdown():
             #                     state="robber"
             #                     time_switch=rospy.Time.now()
             if z > .05:
-                if z < .3:
+                if z < .30:
                     twist.linear.x=0
                     twist.angular.z=0
                     state="robber"
@@ -191,7 +190,7 @@ while not rospy.is_shutdown():
             angle_to_goal = atan2(inc_y, inc_x)
             z=math.sqrt((inc_x*inc_x)+(inc_y*inc_y))
             if z > .05:
-                if z < .3:
+                if z < .35:
                     twist.linear.x=0
                     twist.angular.z=0
                     state="cop"
@@ -200,15 +199,15 @@ while not rospy.is_shutdown():
             if range_left>.05:
                 print("should turn right")
                 twist.angular.z=.2
-                twist.linear.x=.1
+                twist.linear.x=.15
         elif (range_right<range_left):
             if range_right>.05:
                 print("should turn left")
                 twist.angular.z=-.2
-                twist.linear.x=.1
+                twist.linear.x=.15
         else:
             twist.angular.z=0
-            twist.linear.x=.1
+            twist.linear.x=.15
             print("Only go forwards")
         if (range_ahead<.6):
             if range_ahead>0:

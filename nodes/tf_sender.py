@@ -15,7 +15,7 @@ from tf.transformations import euler_from_quaternion, quaternion_from_euler
 rospy.init_node("sender")
 #100.71.173.127
 #100.74.41.103
-host = "100.74.41.103" # set to IP address of target computer
+host = "100.71.173.127" # set to IP address of target computer
 port = 13000
 addr = (host, port)
 UDPSock = socket(AF_INET, SOCK_DGRAM)

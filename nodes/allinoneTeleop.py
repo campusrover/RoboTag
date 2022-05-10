@@ -27,7 +27,6 @@ else:
   import tty, termios
 
 
-
 # TELEOP PART STARTS
 
 BURGER_MAX_LIN_VEL = 0.22
@@ -38,29 +37,6 @@ WAFFLE_MAX_ANG_VEL = 1.82
 
 LIN_VEL_STEP_SIZE = 0.01
 ANG_VEL_STEP_SIZE = 0.1
-
-msg = """
-Control Your TurtleBot3!
----------------------------
-Moving around:
-        w
-   a    s    d
-        x
-
-w/x : increase/decrease linear velocity (Burger : ~ 0.22, Waffle and Waffle Pi : ~ 0.26)
-a/d : increase/decrease angular velocity (Burger : ~ 2.84, Waffle and Waffle Pi : ~ 1.82)
-
-space key, s : force stop
-
-CTRL-C to quit
-"""
-
-e = """
-Communications Failed
-"""
-
-
-
 
 
 
@@ -128,18 +104,16 @@ def checkAngularLimitVelocity(vel):
 # TELEOP PART ENDS
 
 
-
-
-
-
 # fill in scan callback
 def scan_cb(msg):
    global range_ahead
    global range_left
    global range_right
+   global range_ahead1
    msg.range_max=5
    msg.range_min=.15
    range_ahead=msg.ranges[0]
+   range_ahead1=sum(msg.ranges[350:359]+msg.ranges[0:10])/len(msg.ranges[350:359]+msg.ranges[0:10])
    range_left=msg.ranges[270]
    range_right=msg.ranges[90]
   
@@ -168,6 +142,21 @@ def key_cb(msg):
    statek = msg.data
    last_key_press_time = rospy.Time.now()
 
+def left_or_right(angle_to_goal, theta):
+            angle_to_goal += math.pi
+            theta += math.pi
+            goal_range = theta + math.pi
+            wrapped = goal_range - (2 * math.pi)
+            if abs(angle_to_goal - theta) > 0.2:
+                if (goal_range) > (2 * math.pi) and (theta < angle_to_goal or angle_to_goal < wrapped):
+                    return("left")
+                elif (goal_range) < (2 * math.pi) and (theta < angle_to_goal and angle_to_goal < goal_range):
+                    return("left")
+                else:
+                    return("right")
+
+            else:
+                return("straight")
 # print the state of the robot
 def print_state():
    print("---")
@@ -178,7 +167,7 @@ def print_state():
    print("SECS SINCE LAST KEY PRESS: " + str(time_since.secs))
 
 
-count=0
+
 name = 'rob1'
 state = 'robber'
 # init node
@@ -195,7 +184,7 @@ cmd_vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
 # start in state halted and grab the current time
 
 last_key_press_time = rospy.Time.now()
-
+first = True
 # set rate
 rate = rospy.Rate(10)
 #initializes distance measurement
@@ -218,34 +207,29 @@ string=""
 twist=Twist()
 time_switch=rospy.Time.now()
 statek='z'
-
+time_select=rospy.Time.now()
 # Wait for published topics, exit on ^c
 while not rospy.is_shutdown():
     #print(json.loads(string))
     if state == "cop":
         if rospy.Time.now().to_sec()-time_switch.to_sec()>10:
-            
             inc_x = posex2 -posex1
             inc_y = posey2 -posey1
             angle_to_goal = atan2(inc_y, inc_x)
-            print("ANGLE @ GOAL")
-            print(angle_to_goal)
-            print(theta)
             z=math.sqrt((inc_x*inc_x)+(inc_y*inc_y))
             goal_range = theta + 3.14
             wrapped = goal_range - 6.14
-            if abs(angle_to_goal - theta) > 0.1:
-                if (goal_range) > 6.14 and (theta < angle_to_goal or angle_to_goal < wrapped):
-                    twist.linear.x = 0.0
-                    twist.angular.z = -0.3
-                elif (goal_range) < 6.14 and (theta < angle_to_goal or angle_to_goal < goal_range):
-                    twist.linear.x = 0.0
-                    twist.angular.z = -0.3
-                else:
-                    twist.linear.x = 0.0
-                    twist.angular.z = 0.3
-
-            else:
+            command = left_or_right(angle_to_goal,theta)
+            if (command == "left"):
+                print("cop should go left")
+                twist.linear.x = 0.1
+                twist.angular.z = 0.35
+            elif (command == "right"):
+                print("cop should go right")
+                twist.linear.x = 0.1
+                twist.angular.z = -0.35
+            elif (command == "straight"):
+                print("cop should go straight")
                 twist.linear.x = 0.2
                 twist.angular.z = 0.0
             # if range_ahead<.3:
@@ -264,29 +248,34 @@ while not rospy.is_shutdown():
             #                     state="robber"
             #                     time_switch=rospy.Time.now()
             if z > .05:
-                if z < .3:
+                if z < .30:
                     twist.linear.x=0
                     twist.angular.z=0
                     state="robber"
                     time_switch=rospy.Time.now()
+                    first = False
+        else:
+            twist.linear.x=0
+            twist.angular.z=0
     elif state == "robber":
+        # if rospy.Time.now().to_sec()-time_select.to_sec()>5:
+            
         scan_sub = rospy.Subscriber('/scan', LaserScan, scan_cb)
         print(posex1)
-        print(posey1)
-        
-            
-   # publish cmd_vel from here 
-        cmd_vel_msg = '/cmd_vel'
-        cmd_vel_pub = rospy.Publisher(cmd_vel_msg, Twist, queue_size=10)
-        check=(rospy.Time.now().to_sec()-time_start.to_sec())
+        print(posey1)     
+        # publish cmd_vel from here 
         cmd_vel_pub.publish(twist)
+        while (rospy.Time.now().to_sec() - time_switch.to_sec() < 4 and first == False):
+            twist.angular.z=.4
+            twist.linear.x=-.1
+            cmd_vel_pub.publish(twist)
         if rospy.Time.now().to_sec()-time_switch.to_sec()>10:
             inc_x = posex2 -posex1
             inc_y = posey2 -posey1
             angle_to_goal = atan2(inc_y, inc_x)
             z=math.sqrt((inc_x*inc_x)+(inc_y*inc_y))
             if z > .05:
-                if z < .3:
+                if z < .35:
                     twist.linear.x=0
                     twist.angular.z=0
                     state="cop"
@@ -295,21 +284,110 @@ while not rospy.is_shutdown():
             if range_left>.05:
                 print("should turn right")
                 twist.angular.z=.2
-                twist.linear.x=.1
+                twist.linear.x=.15
         elif (range_right<range_left):
             if range_right>.05:
                 print("should turn left")
                 twist.angular.z=-.2
-                twist.linear.x=.1
+                twist.linear.x=.15
         else:
             twist.angular.z=0
-            twist.linear.x=.1
+            twist.linear.x=.15
             print("Only go forwards")
         if (range_ahead<.6):
             if range_ahead>0:
                 twist.linear.x=0
                 twist.angular.z=.2
-    elif state=='robber-user':
+    elif state=='cop-user':
+
+        #check state change
+
+        if rospy.Time.now().to_sec()-time_switch.to_sec()>10:
+            inc_x = posex2 -posex1
+            inc_y = posey2 -posey1
+            angle_to_goal = atan2(inc_y, inc_x)
+            z=math.sqrt((inc_x*inc_x)+(inc_y*inc_y))
+            if z > .05:
+                if z < .35:
+                    twist.linear.x=0
+                    twist.angular.z=0
+                    state="robber"
+                    time_switch=rospy.Time.now()
+
+
+        if os.name != 'nt':
+            settings = termios.tcgetattr(sys.stdin)
+
+        #rospy.init_node('turtlebot3_teleop')
+        cmd_vel_msg = '/cmd_vel'
+        cmd_vel_pub = rospy.Publisher(cmd_vel_msg, Twist, queue_size=10)
+        turtlebot3_model = rospy.get_param("model", "burger")
+        cmd_vel_pub.publish(twist)
+        inc_x = posex2 -posex1
+        inc_y = posey2 -posey1
+
+        status = 0
+        target_linear_vel   = 0.0
+        target_angular_vel  = 0.0
+        control_linear_vel  = 0.0
+        control_angular_vel = 0.0
+
+        try:
+            print(msg)
+            while(1):
+                key = getKey()
+                if key == 'w' :
+                    target_linear_vel = checkLinearLimitVelocity(target_linear_vel + LIN_VEL_STEP_SIZE)
+                    status = status + 1
+                    print(vels(target_linear_vel,target_angular_vel))
+                elif key == 'x' :
+                    target_linear_vel = checkLinearLimitVelocity(target_linear_vel - LIN_VEL_STEP_SIZE)
+                    status = status + 1
+                    print(vels(target_linear_vel,target_angular_vel))
+                elif key == 'a' :
+                    target_angular_vel = checkAngularLimitVelocity(target_angular_vel + ANG_VEL_STEP_SIZE)
+                    status = status + 1
+                    print(vels(target_linear_vel,target_angular_vel))
+                elif key == 'd' :
+                    target_angular_vel = checkAngularLimitVelocity(target_angular_vel - ANG_VEL_STEP_SIZE)
+                    status = status + 1
+                    print(vels(target_linear_vel,target_angular_vel))
+                elif key == ' ' or key == 's' :
+                    target_linear_vel   = 0.0
+                    control_linear_vel  = 0.0
+                    target_angular_vel  = 0.0
+                    control_angular_vel = 0.0
+                    print(vels(target_linear_vel, target_angular_vel))
+                else:
+                    if (key == '\x03'):
+                        break
+
+                if status == 20 :
+                    print(msg)
+                    status = 0
+
+                twist = Twist()
+
+                control_linear_vel = makeSimpleProfile(control_linear_vel, target_linear_vel, (LIN_VEL_STEP_SIZE/2.0))
+                twist.linear.x = control_linear_vel; twist.linear.y = 0.0; twist.linear.z = 0.0
+
+                control_angular_vel = makeSimpleProfile(control_angular_vel, target_angular_vel, (ANG_VEL_STEP_SIZE/2.0))
+                twist.angular.x = 0.0; twist.angular.y = 0.0; twist.angular.z = control_angular_vel
+
+                cmd_vel_pub.publish(twist)
+
+        except:
+            print(e)
+        finally:
+            twist = Twist()
+            twist.linear.x = 0.0; twist.linear.y = 0.0; twist.linear.z = 0.0
+            twist.angular.x = 0.0; twist.angular.y = 0.0; twist.angular.z = 0.0
+            cmd_vel_pub.publish(twist)
+        if os.name != 'nt':
+            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
+elif state=='robber-user':
+
+        #check state change
 
         if rospy.Time.now().to_sec()-time_switch.to_sec()>10:
             inc_x = posex2 -posex1
@@ -324,7 +402,6 @@ while not rospy.is_shutdown():
                     time_switch=rospy.Time.now()
 
 
-
         if os.name != 'nt':
             settings = termios.tcgetattr(sys.stdin)
 
@@ -368,98 +445,6 @@ while not rospy.is_shutdown():
                     target_angular_vel  = 0.0
                     control_angular_vel = 0.0
                     print(vels(target_linear_vel, target_angular_vel))
-                elif key == 'r':
-                    state = 'robber'
-                    break
-                else:
-                    if (key == '\x03'):
-                        break
-
-                if status == 20 :
-                    print(msg)
-                    status = 0
-
-                twist = Twist()
-
-                control_linear_vel = makeSimpleProfile(control_linear_vel, target_linear_vel, (LIN_VEL_STEP_SIZE/2.0))
-                twist.linear.x = control_linear_vel; twist.linear.y = 0.0; twist.linear.z = 0.0
-
-                control_angular_vel = makeSimpleProfile(control_angular_vel, target_angular_vel, (ANG_VEL_STEP_SIZE/2.0))
-                twist.angular.x = 0.0; twist.angular.y = 0.0; twist.angular.z = control_angular_vel
-
-                cmd_vel_pub.publish(twist)
-
-        except:
-            print(e)
-
-        finally:
-            twist = Twist()
-            twist.linear.x = 0.0; twist.linear.y = 0.0; twist.linear.z = 0.0
-            twist.angular.x = 0.0; twist.angular.y = 0.0; twist.angular.z = 0.0
-            cmd_vel_pub.publish(twist)
-
-        if os.name != 'nt':
-            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
-    elif state=='cop-user':
-
-        #check state change
-        inc_x = posex2 -posex1
-        inc_y = posey2 -posey1
-        z=math.sqrt((inc_x*inc_x)+(inc_y*inc_y))
-
-        if z > .05 and z < .3:
-            twist.linear.x=0
-            twist.angular.z=0
-            state="robber"
-            time_switch=rospy.Time.now()
-
-
-        if os.name != 'nt':
-            settings = termios.tcgetattr(sys.stdin)
-
-        #rospy.init_node('turtlebot3_teleop')
-        cmd_vel_msg = '/cmd_vel'
-        cmd_vel_pub = rospy.Publisher(cmd_vel_msg, Twist, queue_size=10)
-        turtlebot3_model = rospy.get_param("model", "burger")
-        cmd_vel_pub.publish(twist)
-        inc_x = posex2 -posex1
-        inc_y = posey2 -posey1
-
-        status = 0
-        target_linear_vel   = 0.0
-        target_angular_vel  = 0.0
-        control_linear_vel  = 0.0
-        control_angular_vel = 0.0
-
-        try:
-            print(msg)
-            while(1):
-                key = getKey()
-                if key == 'w' :
-                    target_linear_vel = checkLinearLimitVelocity(target_linear_vel + LIN_VEL_STEP_SIZE)
-                    status = status + 1
-                    print(vels(target_linear_vel,target_angular_vel))
-                elif key == 'x' :
-                    target_linear_vel = checkLinearLimitVelocity(target_linear_vel - LIN_VEL_STEP_SIZE)
-                    status = status + 1
-                    print(vels(target_linear_vel,target_angular_vel))
-                elif key == 'a' :
-                    target_angular_vel = checkAngularLimitVelocity(target_angular_vel + ANG_VEL_STEP_SIZE)
-                    status = status + 1
-                    print(vels(target_linear_vel,target_angular_vel))
-                elif key == 'd' :
-                    target_angular_vel = checkAngularLimitVelocity(target_angular_vel - ANG_VEL_STEP_SIZE)
-                    status = status + 1
-                    print(vels(target_linear_vel,target_angular_vel))
-                elif key == ' ' or key == 's' :
-                    target_linear_vel   = 0.0
-                    control_linear_vel  = 0.0
-                    target_angular_vel  = 0.0
-                    control_angular_vel = 0.0
-                    print(vels(target_linear_vel, target_angular_vel))
-                elif key == 'r':
-                    state = 'robber'
-                    break
                 else:
                     if (key == '\x03'):
                         break
@@ -490,32 +475,28 @@ while not rospy.is_shutdown():
         if os.name != 'nt':
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
 
+            
     # elif state=='cop-user':
    # print out coordinates, speed, the current state and time since last key press
     print(posex2)
     print(posey2)
-    
-    print_state()
-    #Edit TELEOP
     if os.name != 'nt':
         settings = termios.tcgetattr(sys.stdin)
     key = getKey()
     if key == 'h': #h for human
         if state == 'robber':
             state = 'robber-user'
-    elif key == 'j': 
-        if state == 'cop':
+        elif state= 'cop:
             state = 'cop-user'
-    elif key == 'r': #r for robber
+        
+    elif key == 'r': #r for robot
         if state == 'robber-user':
             state = 'robber'
-    elif key == 'c':
-        if state =='cop-user':
+        elif state =='cop-user':
             state='cop'
     else:
         print("No change")
     print('Current state: '  + state)
-    # checks for the closest object
-    
+    #checks for the closest object
     cmd_vel_pub.publish(twist)
     rate.sleep()

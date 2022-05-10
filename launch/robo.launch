@@ -11,9 +11,6 @@
   <node name="sender" pkg="robotag" type="tf_sender.py" output="screen"/>
   <include file="$(find robotag)/launch/turtlebot3_navigation.launch"/>
   <node name="amcl_coordinates" pkg="robotag" type="amcl_coordinates.py" output="screen"/>
-
-
-
 </launch>
 
   
