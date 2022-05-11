@@ -19,6 +19,8 @@ from socket import *
 import json
 from std_msgs.msg import Float64MultiArray
 from geometry_msgs.msg import PoseWithCovarianceStamped 
+from robotag.srv import Json
+
 
 import select
 if os.name == 'nt':
@@ -166,7 +168,10 @@ def print_state():
    time_since = rospy.Time.now() - last_key_press_time
    print("SECS SINCE LAST KEY PRESS: " + str(time_since.secs))
 
-
+def set_lights(state):
+    rospy.wait_for_service('set_led_state')
+    set_lights = rospy.ServiceProxy('set_led_state', Json)
+    resp1 = set_lights(state)
 
 name = 'rob1'
 state = 'robber'
@@ -212,6 +217,7 @@ time_select=rospy.Time.now()
 # Wait for published topics, exit on ^c
 while not rospy.is_shutdown():
     #print(json.loads(string))
+    set_lights(state)
     if state == "cop":
         if rospy.Time.now().to_sec()-time_switch.to_sec()>10:
             inc_x = posex2 -posex1

@@ -13,6 +13,7 @@ RED = 27 # Red
 
 
 def set_led_state_callback(req):
+    GPIO.output(BLUE, True)
     if req.data == "cop":
         GPIO.output(BLUE, True)
         GPIO.output(YELLOW, False)
@@ -28,22 +29,21 @@ def set_led_state_callback(req):
     elif req.data == "robber-user":
         GPIO.output(BLUE, False)
         GPIO.output(YELLOW, False)
-        GPIO.output(GREEN, False)
-        GPIO.output(WHITE, True)
+        GPIO.output(GREEN, True)
+        GPIO.output(WHITE, False)
         GPIO.output(RED, True)
     elif req.data == "cop-user":
         GPIO.output(BLUE, True)
         GPIO.output(YELLOW, False)
-        GPIO.output(GREEN, False)
-        GPIO.output(WHITE, True)
+        GPIO.output(GREEN, True)
+        GPIO.output(WHITE, False)
         GPIO.output(RED, False)
     rospy.loginfo("LED Command Received: %s", req.data)
-
     return { 'data': req.data,
             'result': 'Successfully changed LED state' }
 
 if __name__ == '__main__':
-    rospy.init_node('led_actuator')
+    rospy.init_node('led_sactuator')
 
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(YELLOW, GPIO.OUT)
@@ -53,7 +53,6 @@ if __name__ == '__main__':
     GPIO.setup(RED, GPIO.OUT)
     rospy.Service('set_led_state', Json, set_led_state_callback)
     rospy.loginfo("Service server started. Ready to get requests.")
-
     rospy.spin()
 
     GPIO.cleanup()
