@@ -207,6 +207,7 @@ string=""
 twist=Twist()
 time_switch=rospy.Time.now()
 statek='z'
+key='r'
 time_select=rospy.Time.now()
 # Wait for published topics, exit on ^c
 while not rospy.is_shutdown():
@@ -312,6 +313,7 @@ while not rospy.is_shutdown():
                     twist.linear.x=0
                     twist.angular.z=0
                     state="robber"
+                    key='r'
                     time_switch=rospy.Time.now()
 
 
@@ -339,31 +341,31 @@ while not rospy.is_shutdown():
                 if key == 'w' :
                     target_linear_vel = checkLinearLimitVelocity(target_linear_vel + LIN_VEL_STEP_SIZE)
                     status = status + 1
-                    print(vels(target_linear_vel,target_angular_vel))
+                    
                 elif key == 'x' :
                     target_linear_vel = checkLinearLimitVelocity(target_linear_vel - LIN_VEL_STEP_SIZE)
                     status = status + 1
-                    print(vels(target_linear_vel,target_angular_vel))
+                   
                 elif key == 'a' :
                     target_angular_vel = checkAngularLimitVelocity(target_angular_vel + ANG_VEL_STEP_SIZE)
                     status = status + 1
-                    print(vels(target_linear_vel,target_angular_vel))
+                   
                 elif key == 'd' :
                     target_angular_vel = checkAngularLimitVelocity(target_angular_vel - ANG_VEL_STEP_SIZE)
                     status = status + 1
-                    print(vels(target_linear_vel,target_angular_vel))
+                   
                 elif key == ' ' or key == 's' :
                     target_linear_vel   = 0.0
                     control_linear_vel  = 0.0
                     target_angular_vel  = 0.0
                     control_angular_vel = 0.0
-                    print(vels(target_linear_vel, target_angular_vel))
+                    
                 else:
                     if (key == '\x03'):
                         break
 
                 if status == 20 :
-                    print(msg)
+                   
                     status = 0
 
                 twist = Twist()
@@ -376,8 +378,6 @@ while not rospy.is_shutdown():
 
                 cmd_vel_pub.publish(twist)
 
-        except:
-            print(e)
         finally:
             twist = Twist()
             twist.linear.x = 0.0; twist.linear.y = 0.0; twist.linear.z = 0.0
@@ -385,7 +385,7 @@ while not rospy.is_shutdown():
             cmd_vel_pub.publish(twist)
         if os.name != 'nt':
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
-elif state=='robber-user':
+    elif state=='robber-user':
 
         #check state change
 
@@ -399,6 +399,7 @@ elif state=='robber-user':
                     twist.linear.x=0
                     twist.angular.z=0
                     state="cop"
+                    key = 'r'
                     time_switch=rospy.Time.now()
 
 
@@ -420,37 +421,37 @@ elif state=='robber-user':
         control_angular_vel = 0.0
 
         try:
-            print(msg)
+            
             while(1):
                 key = getKey()
                 if key == 'w' :
                     target_linear_vel = checkLinearLimitVelocity(target_linear_vel + LIN_VEL_STEP_SIZE)
                     status = status + 1
-                    print(vels(target_linear_vel,target_angular_vel))
+                    
                 elif key == 'x' :
                     target_linear_vel = checkLinearLimitVelocity(target_linear_vel - LIN_VEL_STEP_SIZE)
                     status = status + 1
-                    print(vels(target_linear_vel,target_angular_vel))
+                    
                 elif key == 'a' :
                     target_angular_vel = checkAngularLimitVelocity(target_angular_vel + ANG_VEL_STEP_SIZE)
                     status = status + 1
-                    print(vels(target_linear_vel,target_angular_vel))
+                   
                 elif key == 'd' :
                     target_angular_vel = checkAngularLimitVelocity(target_angular_vel - ANG_VEL_STEP_SIZE)
                     status = status + 1
-                    print(vels(target_linear_vel,target_angular_vel))
+                   
                 elif key == ' ' or key == 's' :
                     target_linear_vel   = 0.0
                     control_linear_vel  = 0.0
                     target_angular_vel  = 0.0
                     control_angular_vel = 0.0
-                    print(vels(target_linear_vel, target_angular_vel))
+                    
                 else:
                     if (key == '\x03'):
                         break
 
                 if status == 20 :
-                    print(msg)
+                    
                     status = 0
 
                 twist = Twist()
@@ -463,8 +464,6 @@ elif state=='robber-user':
 
                 cmd_vel_pub.publish(twist)
 
-        except:
-            print(e)
 
         finally:
             twist = Twist()
@@ -486,7 +485,7 @@ elif state=='robber-user':
     if key == 'h': #h for human
         if state == 'robber':
             state = 'robber-user'
-        elif state= 'cop:
+        elif state== 'cop':
             state = 'cop-user'
         
     elif key == 'r': #r for robot
