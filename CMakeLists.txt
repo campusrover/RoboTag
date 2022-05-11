@@ -7,8 +7,20 @@ project(robotag)
 ################################################################################
 # Find catkin packages and libraries for catkin and system dependencies
 ################################################################################
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  rospy
+  message_generation)
 
+
+add_service_files(
+  FILES 
+  Json.srv)
+
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
 ################################################################################
 # Setup for python modules and scripts
 ################################################################################
