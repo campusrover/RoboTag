@@ -6,11 +6,12 @@
   <arg name="robot_name"  value="Rob2" />
   </include>
   </group> -->
-  <node name="rob1" pkg="robotag" type="allinone.py" output="screen"/>
+  <node name="rob1" pkg="robotag" type="allinoneTeleop.py" output="screen"/>
   <node name="receiver" pkg="robotag" type="receiver.py" output="screen"/>
   <node name="sender" pkg="robotag" type="tf_sender.py" output="screen"/>
   <include file="$(find robotag)/launch/turtlebot3_navigation.launch"/>
   <node name="amcl_coordinates" pkg="robotag" type="amcl_coordinates.py" output="screen"/>
+  <!-- <node name="led_service" pkg="robotag" type="led_service.py" output="screen"/> -->
 </launch>
 
   
