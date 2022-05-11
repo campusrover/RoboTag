@@ -19,7 +19,6 @@ from socket import *
 import json
 from std_msgs.msg import Float64MultiArray
 from geometry_msgs.msg import PoseWithCovarianceStamped 
-
 import select
 if os.name == 'nt':
   import msvcrt
@@ -169,7 +168,7 @@ def print_state():
 
 
 name = 'rob1'
-state = 'robber'
+state = 'cop'
 # init node
 rospy.init_node("rob1")
 theta = 0.0
@@ -303,19 +302,7 @@ while not rospy.is_shutdown():
 
         #check state change
 
-        if rospy.Time.now().to_sec()-time_switch.to_sec()>10:
-            inc_x = posex2 -posex1
-            inc_y = posey2 -posey1
-            angle_to_goal = atan2(inc_y, inc_x)
-            z=math.sqrt((inc_x*inc_x)+(inc_y*inc_y))
-            if z > .05:
-                if z < .35:
-                    twist.linear.x=0
-                    twist.angular.z=0
-                    state="robber"
-                    key='r'
-                    time_switch=rospy.Time.now()
-
+        
 
         if os.name != 'nt':
             settings = termios.tcgetattr(sys.stdin)
@@ -335,9 +322,10 @@ while not rospy.is_shutdown():
         control_angular_vel = 0.0
 
         try:
-            print(msg)
+            
             while(1):
                 key = getKey()
+                
                 if key == 'w' :
                     target_linear_vel = checkLinearLimitVelocity(target_linear_vel + LIN_VEL_STEP_SIZE)
                     status = status + 1
@@ -359,7 +347,6 @@ while not rospy.is_shutdown():
                     control_linear_vel  = 0.0
                     target_angular_vel  = 0.0
                     control_angular_vel = 0.0
-                    
                 else:
                     if (key == '\x03'):
                         break
@@ -367,9 +354,27 @@ while not rospy.is_shutdown():
                 if status == 20 :
                    
                     status = 0
-
+                if rospy.Time.now().to_sec()-time_switch.to_sec()>10:
+                    inc_x = posex2 -posex1
+                    inc_y = posey2 -posey1
+                    angle_to_goal = atan2(inc_y, inc_x)
+                    z=math.sqrt((inc_x*inc_x)+(inc_y*inc_y))
+                    if z > .05:
+                        if z < .35:
+                            twist.linear.x=0
+                            twist.angular.z=0
+                            state="robber"
+                            key='r'
+                            time_switch=rospy.Time.now()
+                            break
+                if key == 'r':
+                    if state == 'robber-user':
+                        state = 'robber'
+                    elif state== 'cop-user':
+                        state = 'cop'
+                    break
                 twist = Twist()
-
+                
                 control_linear_vel = makeSimpleProfile(control_linear_vel, target_linear_vel, (LIN_VEL_STEP_SIZE/2.0))
                 twist.linear.x = control_linear_vel; twist.linear.y = 0.0; twist.linear.z = 0.0
 
@@ -388,19 +393,6 @@ while not rospy.is_shutdown():
     elif state=='robber-user':
 
         #check state change
-
-        if rospy.Time.now().to_sec()-time_switch.to_sec()>10:
-            inc_x = posex2 -posex1
-            inc_y = posey2 -posey1
-            angle_to_goal = atan2(inc_y, inc_x)
-            z=math.sqrt((inc_x*inc_x)+(inc_y*inc_y))
-            if z > .05:
-                if z < .3:
-                    twist.linear.x=0
-                    twist.angular.z=0
-                    state="cop"
-                    key = 'r'
-                    time_switch=rospy.Time.now()
 
 
         if os.name != 'nt':
@@ -427,7 +419,6 @@ while not rospy.is_shutdown():
                 if key == 'w' :
                     target_linear_vel = checkLinearLimitVelocity(target_linear_vel + LIN_VEL_STEP_SIZE)
                     status = status + 1
-                    
                 elif key == 'x' :
                     target_linear_vel = checkLinearLimitVelocity(target_linear_vel - LIN_VEL_STEP_SIZE)
                     status = status + 1
@@ -445,7 +436,7 @@ while not rospy.is_shutdown():
                     control_linear_vel  = 0.0
                     target_angular_vel  = 0.0
                     control_angular_vel = 0.0
-                    
+                
                 else:
                     if (key == '\x03'):
                         break
@@ -453,7 +444,25 @@ while not rospy.is_shutdown():
                 if status == 20 :
                     
                     status = 0
-
+                
+                if key == 'r': #r for switch to robot
+                    if state == 'robber-user':
+                        state = 'robber'
+                    elif state== 'cop-user':
+                        state = 'cop'
+                    break
+                if rospy.Time.now().to_sec()-time_switch.to_sec()>10:
+                    inc_x = posex2 -posex1
+                    inc_y = posey2 -posey1
+                    angle_to_goal = atan2(inc_y, inc_x)
+                    z=math.sqrt((inc_x*inc_x)+(inc_y*inc_y))
+                    if z > .05:
+                        if z < .3:
+                            twist.linear.x=0
+                            twist.angular.z=0
+                            state="cop"
+                            time_switch=rospy.Time.now()
+                            break
                 twist = Twist()
 
                 control_linear_vel = makeSimpleProfile(control_linear_vel, target_linear_vel, (LIN_VEL_STEP_SIZE/2.0))
