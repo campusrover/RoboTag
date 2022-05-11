@@ -39,8 +39,8 @@ def set_led_state_callback(req):
         GPIO.output(RED, False)
     rospy.loginfo("LED Command Received: %s", req.data)
 
-    return { 'success': req.data,
-            'message': 'Successfully changed LED state' }
+    return { 'data': req.data,
+            'result': 'Successfully changed LED state' }
 
 if __name__ == '__main__':
     rospy.init_node('led_actuator')
