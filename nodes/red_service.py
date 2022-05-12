@@ -9,7 +9,7 @@ import RPi.GPIO as GPIO
 # GREEN = 3  # Green
 # BLUE = 2 # Blue
 # WHITE = 17 # White
-RED = 27 # Red
+RED = 4 # Red
 
 
 def red_callback(req):
