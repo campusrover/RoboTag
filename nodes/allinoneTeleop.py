@@ -19,12 +19,7 @@ from socket import *
 import json
 from std_msgs.msg import Float64MultiArray
 from geometry_msgs.msg import PoseWithCovarianceStamped 
-<<<<<<< HEAD
 from robotag.srv import Json
-
-
-=======
->>>>>>> bec9c29357ddf22ec041ef2bf6edcb38191aea88
 import select
 if os.name == 'nt':
   import msvcrt
@@ -177,7 +172,7 @@ def set_lights(state):
     resp1 = set_lights(state)
 
 name = 'rob1'
-state = 'cop'
+state = 'robber'
 # init node
 rospy.init_node("rob1")
 theta = 0.0
@@ -215,7 +210,7 @@ string=""
 twist=Twist()
 time_switch=rospy.Time.now()
 statek='z'
-key='r'
+
 time_select=rospy.Time.now()
 # Wait for published topics, exit on ^c
 while not rospy.is_shutdown():
@@ -290,14 +285,17 @@ while not rospy.is_shutdown():
                     twist.angular.z=0
                     state="cop"
                     time_switch=rospy.Time.now()
-        if (range_left<range_right):
+        if (range_left>2 and range_right>2):
+            twist.angular.z=0
+            twist.linear.x=15
+        elif (range_left<range_right):
             if range_left>.05:
-                print("should turn right")
+                print("should turn left")
                 twist.angular.z=.2
                 twist.linear.x=.15
         elif (range_right<range_left):
             if range_right>.05:
-                print("should turn left")
+                print("should turn right")
                 twist.angular.z=-.2
                 twist.linear.x=.15
         else:
