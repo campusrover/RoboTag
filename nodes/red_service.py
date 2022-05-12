@@ -19,11 +19,10 @@ def red_callback(req):
             'message': 'Successfully changed LED state' }
 
 if __name__ == '__main__':
-    rospy.init_node('led_sactuator')
+    rospy.init_node('red_sactuator')
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(RED, GPIO.OUT)
     rospy.Service('set_red_led', SetBool, red_callback)
     rospy.loginfo("Service server started. Ready to get requests.")
     rospy.spin()
-
     GPIO.cleanup()
