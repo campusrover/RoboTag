@@ -167,10 +167,29 @@ def print_state():
    print("SECS SINCE LAST KEY PRESS: " + str(time_since.secs))
 
 def set_lights(state):
-    rospy.wait_for_service('set_led_state')
-    set_lights = rospy.ServiceProxy('set_led_state', Json)
-    resp1 = set_lights(state)
-
+    rospy.wait_for_service('set_blue_led')
+    rospy.wait_for_service('set_red_led')
+    rospy.wait_for_service('set_green_led')
+    set_blue_lights = rospy.ServiceProxy('set_blue_led', SetBool)
+    set_red_lights = rospy.ServiceProxy('set_red_led', SetBool)
+    set_green_lights = rospy.ServiceProxy('set_green_led', SetBool)
+    if state == "cop":
+        set_blue_lights(True)
+        set_red_lights(False)
+        set_green_lights(False)
+    elif state == "robber":
+        set_blue_lights(False)
+        set_red_lights(True)
+        set_green_lights(False)
+    elif state == "robber-user":
+        set_blue_lights(False)
+        set_red_lights(True)
+        set_green_lights(True)
+    elif state == "cop-user":
+        set_blue_lights(True)
+        set_red_lights(False)
+        set_green_lights(True)
+        
 name = 'rob1'
 state = 'robber'
 # init node
