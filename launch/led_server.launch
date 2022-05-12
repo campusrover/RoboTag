@@ -1,3 +1,5 @@
+<launch>
 <node name="blue_sactuator" pkg="robotag" type="blue_service.py" output="screen"/>
 <node name="green_sactuator" pkg="robotag" type="green_service.py" output="screen"/>
 <node name="red_sactuator" pkg="robotag" type="red_service.py" output="screen"/>
+</launch>
